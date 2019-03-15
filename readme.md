@@ -5,6 +5,7 @@
 
 ├── demo_entries                    #demo文件夹    
 │   ├── 01_shadow                   #用three.js画阴影   
-└── xxx                             #公用js打包存放
+│   ├── 01_dragDrop                 #three.js实现网络图的拖拽 
+└── xxx                             
 
 ```
