@@ -53,6 +53,7 @@
     "webpack-hot-middleware": "^2.18.2"
   },
   "dependencies": {
+    "@tweenjs/tween.js": "^17.3.0",
     "art-template": "^4.13.2",
     "compression": "^1.7.0",
     "console-polyfill": "^0.3.0",
@@ -63,6 +64,7 @@
     "object-assign": "^4.1.1",
     "promise": "^8.0.1",
     "three": "^0.102.1",
+    "three-onevent": "^1.1.2",
     "three.meshline": "^1.2.0",
     "whatwg-fetch": "^2.0.3"
   },

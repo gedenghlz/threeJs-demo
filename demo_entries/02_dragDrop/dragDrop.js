@@ -1,17 +1,16 @@
 import 'three/examples/js/controls/OrbitControls';
-
-// import {
-// 	MeshLine,
-// 	MeshLineMaterial
-// // } from 'three.meshline';
+import 'three-onevent';
 import DragControls from '../../lib/js/THREE.DragControls';
 import 'three/examples/js/libs/dat.gui.min.js';
-import 'three/examples/js/libs/tween.min.js';
+import TWEEN from '@tweenjs/tween.js';
+
 
 
 var THREEChart = function () {
 	this.nodes = [];
 	this.edges = [];
+	this.sprites = [];
+	this.visibleEles = [];
 	this.myCanvas = document.getElementById('canvas-frame');
 	this.width = this.myCanvas.clientWidth;
 	this.height = this.myCanvas.clientHeight;
@@ -49,30 +48,46 @@ THREEChart.prototype = {
 
 			}
 		}
+		this.allSceneChild = objects;
 		new DragControls(objects, self.camera, self.renderer.domElement, (selected) => {
-			var selectedEdges = self.edgeGroupObject.filter((item) => {
-				return item.indexOf(selected.name) >= 0
-			})
+			var selectedEdges = self.getNodeLines(selected.name);
 			selectedEdges.forEach(name => {
-				self.scene.remove(self.scene.getObjectByName(name));
-				self.scene.remove(self.scene.getObjectByName(name + 'text'));
-				self.scene.remove(self.scene.getObjectByName(selected.name + 'text'));
+				var line = self.scene.getObjectByName(name)
+				var pArr = line.geometry.vertices;
+				line.geometry.verticesNeedUpdate = true;
+
+				var text = self.scene.getObjectByName(name + 'text');
+				var tP = text.position
+
+				if (name.startsWith(selected.name)) {
+					tP.x = tP.x + (selected.position.x - pArr[0].x) / 2
+					tP.y = tP.y + (selected.position.y - pArr[0].y) / 2
+					tP.z = tP.z + (selected.position.z - pArr[0].z) / 2
+					pArr[0] = new THREE.Vector3(selected.position.x, selected.position.y, selected.position.z)
+				} else {
+					tP.x = tP.x + (selected.position.x - pArr[1].x) / 2
+					tP.y = tP.y + (selected.position.y - pArr[1].y) / 2
+					tP.z = tP.z + (selected.position.z - pArr[1].z) / 2
+					pArr[1] = new THREE.Vector3(selected.position.x, selected.position.y, selected.position.z)
+				}
+
+				var nT = self.scene.getObjectByName(selected.name + 'text');
+				nT.position.x = selected.position.x - 10;
+				nT.position.y = selected.position.y - 70;
+				nT.position.z = selected.position.z;
 
 
-				self.drawText({
-					id: selected.name,
-					message: selected.message,
-					color: selected.xk ? 0xc23531 : 0xff0000,
-					x: selected.position.x,
-					y: selected.position.y,
-					z: selected.position.z
-				});
-				self.drawEdge(self.edges[name]);
 			})
 
 		}, self.controls);
 	},
 
+
+	getNodeLines: function (name) {
+		return this.edgeGroupObject.filter((item) => {
+			return item.startsWith(name + '-') || item.endsWith('-' + name)
+		})
+	},
 
 	start: function () {
 		var self = this;
@@ -81,109 +96,109 @@ THREEChart.prototype = {
 
 		self.nodes = [{
 			id: 'n1',
-			name: '某某石化有限公司',
+			name: '某某石化',
 			xk: true,
 			level: 'center',
 			pos: [0, 0, 0] // 中心节点的z为坐标原点
 		}, {
 			id: 'n2',
-			name: '**能源有限公司',
+			name: '**能源',
 			level: 'sy-1',
 			pos: [-400, 600]
 		}, {
 			id: 'n3',
-			name: '**石化产品有限公司',
+			name: '**石化产品',
 			level: 'sy-1',
 			pos: [-400, 400]
 		}, {
 			id: 'n4',
-			name: '**化工有限公司',
+			name: '**化工',
 			level: 'sy-1',
 			pos: [-400, 200]
 		}, {
 			id: 'n5',
-			name: '**贸易有限公司',
+			name: '**贸易',
 			level: 'sy-1',
 			pos: [-400, 0]
 		}, {
 			id: 'n6',
-			name: '**生物科技有限公司',
+			name: '**生物科技',
 			level: 'sy-1',
 			pos: [-400, -200]
 		}, {
 			id: 'n7',
-			name: '**炼化有限公司',
+			name: '**炼化',
 			xk: true,
 			level: 'sy-1',
 			pos: [-400, -400]
 		}, {
 			id: 'n8',
-			name: '**有限公司',
+			name: '**',
 			level: 'xy-1',
 			pos: [400, 500]
 		}, {
 			id: 'n9',
-			name: '**有限公司',
+			name: '**',
 			level: 'xy-1',
 			pos: [400, 100]
 		}, {
 			id: 'n10',
-			name: '**特种沥青有限公司',
+			name: '**特种沥青',
 			level: 'xy-1',
 			pos: [400, -400]
 		}, {
 			id: 'n11',
-			name: '**A石化有限公司',
+			name: '**A石化',
 			level: 'sy-2',
 			pos: [-800, 500]
 		}, {
 			id: 'n12',
-			name: '**B石化有限公司',
+			name: '**B石化',
 			level: 'sy-2',
 			pos: [-800, 100]
 		}, {
 			id: 'n13',
-			name: '**C石化有限公司',
+			name: '**C石化',
 			level: 'sy-2',
 			pos: [-800, -100]
 		}, {
 			id: 'n14',
-			name: '**D石化有限公司',
+			name: '**D石化',
 			level: 'sy-2',
 			pos: [-800, -500]
 		}, {
 			id: 'n15',
-			name: '**有限公司',
+			name: '**',
 			level: 'xy-2',
 			pos: [800, 600]
 		}, {
 			id: 'n16',
-			name: '**有限公司',
+			name: '**',
 			level: 'xy-2',
 			pos: [800, 400]
 		}, {
 			id: 'n17',
-			name: '**有限公司',
+			name: '**',
 			level: 'xy-2',
 			pos: [800, 200]
 		}, {
 			id: 'n18',
-			name: '**有限公司',
+			name: '**',
 			level: 'xy-2',
 			pos: [800, 0]
 		}, {
 			id: 'n19',
-			name: '**有限公司',
+			name: '**',
 			level: 'xy-2',
 			pos: [800, -200]
 		}, {
 			id: 'n20',
-			name: '**有限公司',
+			name: '**',
 			level: 'xy-2',
 			pos: [800, -400]
 		}, {
 			id: 'n21',
-			name: '**有限公司',
+			name: '**',
 			level: 'xy-2',
 			pos: [800, -600]
 		}];
@@ -192,187 +207,187 @@ THREEChart.prototype = {
 				id: 'n2-n1',
 				source: 'n2',
 				target: 'n1',
-				jyje: '12.5亿'
+				jyje: '12.5'
 			},
 			'n3-n1': {
 				id: 'n3-n1',
 				source: 'n3',
 				target: 'n1',
-				jyje: '44.1亿'
+				jyje: '44.1'
 			},
 			'n4-n1': {
 				id: 'n4-n1',
 				source: 'n4',
 				target: 'n1',
-				jyje: '39.2亿'
+				jyje: '39.2'
 			},
 			'n5-n1': {
 				id: 'n5-n1',
 				source: 'n5',
 				target: 'n1',
-				jyje: '9.9亿'
+				jyje: '9.9'
 			},
 			'n6-n1': {
 				id: 'n6-n1',
 				source: 'n6',
 				target: 'n1',
-				jyje: '24.5亿'
+				jyje: '24.5'
 			},
 			'n7-n1': {
 				id: 'n7-n1',
 				source: 'n7',
 				target: 'n1',
-				jyje: '1.2亿'
+				jyje: '1.2'
 			},
 			'n1-n8': {
 				id: 'n1-n8',
 				source: 'n1',
 				target: 'n8',
-				jyje: '2.3亿'
+				jyje: '2.3'
 			},
 			'n1-n9': {
 				id: 'n1-n9',
 				source: 'n1',
 				target: 'n9',
-				jyje: '1.1亿'
+				jyje: '1.1'
 			},
 			'n1-n10': {
 				id: 'n1-n10',
 				source: 'n1',
 				target: 'n10',
-				jyje: '73.1亿'
+				jyje: '73.1'
 			},
 			'n11-n2': {
 				id: 'n11-n2',
 				source: 'n11',
 				target: 'n2',
-				jyje: '2.2亿'
+				jyje: '2.2'
 			},
 			'n11-n3': {
 				id: 'n11-n3',
 				source: 'n11',
 				target: 'n3',
-				jyje: '23亿'
+				jyje: '23'
 			},
 			'n11-n4': {
 				id: 'n11-n4',
 				source: 'n11',
 				target: 'n4',
-				jyje: '13.9亿'
+				jyje: '13.9'
 			},
 			'n11-n5': {
 				id: 'n11-n5',
 				source: 'n11',
 				target: 'n5',
-				jyje: '8亿'
+				jyje: '8'
 			},
 			'n7-n10': {
 				id: 'n7-n10',
 				source: 'n7',
 				target: 'n10',
-				jyje: '12亿'
+				jyje: '12'
 			},
 			'n7-n11': {
 				id: 'n7-n11',
 				source: 'n7',
 				target: 'n11',
-				jyje: '41.3亿'
+				jyje: '41.3'
 			},
 			'n12-n2': {
 				id: 'n12-n2',
 				source: 'n12',
 				target: 'n2',
-				jyje: '4亿'
+				jyje: '4'
 			},
 			'n12-n3': {
 				id: 'n12-n3',
 				source: 'n12',
 				target: 'n3',
-				jyje: '5.3亿'
+				jyje: '5.3'
 			},
 			'n12-n4': {
 				id: 'n12-n4',
 				source: 'n12',
 				target: 'n4',
-				jyje: '5.1亿'
+				jyje: '5.1'
 			},
 			'n12-n5': {
 				id: 'n12-n5',
 				source: 'n12',
 				target: 'n5',
-				jyje: '1.7亿'
+				jyje: '1.7'
 			},
 			'n12-n6': {
 				id: 'n12-n6',
 				source: 'n12',
 				target: 'n6',
-				jyje: '11.1亿'
+				jyje: '11.1'
 			},
 			'n7-n12': {
 				id: 'n7-n12',
 				source: 'n7',
 				target: 'n12',
-				jyje: '11.8亿'
+				jyje: '11.8'
 			},
 			'n7-n13': {
 				id: 'n7-n13',
 				source: 'n7',
 				target: 'n13',
-				jyje: '4.1亿'
+				jyje: '4.1'
 			},
 			'n7-n14': {
 				id: 'n7-n14',
 				source: 'n7',
 				target: 'n14',
-				jyje: '4.3亿'
+				jyje: '4.3'
 			},
 			'n8-n15': {
 				id: 'n8-n15',
 				source: 'n8',
 				target: 'n15',
-				jyje: '1亿'
+				jyje: '1'
 			},
 			'n8-n16': {
 				id: 'n8-n16',
 				source: 'n8',
 				target: 'n16',
-				jyje: '1亿'
+				jyje: '1'
 			},
 			'n9-n17': {
 				id: 'n9-n17',
 				source: 'n9',
 				target: 'n17',
-				jyje: '1亿'
+				jyje: '1'
 			},
 			'n9-n18': {
 				id: 'n9-n18',
 				source: 'n9',
 				target: 'n18',
-				jyje: '1亿'
+				jyje: '1'
 			},
 			'n10-n7': {
 				id: 'n10-n7',
 				source: 'n10',
 				target: 'n7',
-				jyje: '17.6亿'
+				jyje: '17.6'
 			},
 			'n10-n19': {
 				id: 'n10-n19',
 				source: 'n10',
 				target: 'n19',
-				jyje: '1亿'
+				jyje: '1'
 			},
 			'n10-n20': {
 				id: 'n10-n20',
 				source: 'n10',
 				target: 'n20',
-				jyje: '1亿'
+				jyje: '1'
 			},
 			'n10-n21': {
 				id: 'n10-n21',
 				source: 'n10',
 				target: 'n21',
-				jyje: '1亿'
+				jyje: '1'
 			}
 		};
 
@@ -386,8 +401,9 @@ THREEChart.prototype = {
 
 		// initCamera
 		// 设置相机可看到的远截面有2000的距离，相机的z有1000，则场景中的元素的z大于-1000的都能被看到
-		self.camera = new THREE.PerspectiveCamera(45, self.width / self.height, 0.1, 20000);
-		self.camera.position.z = 800;
+		self.camera = new THREE.PerspectiveCamera(30, self.width / self.height, 0.1, 20000);
+		// self.camera = new THREE.OrthographicCamera(self.width / - 2, self.width / 2, self.height / 2, self.height / - 2, 0.1, 20000);
+		self.camera.position.z = 1200;
 		self.camera.position.y = 0;
 		self.camera.position.x = 0;
 		self.camera.lookAt(0, 0, 0);
@@ -397,33 +413,18 @@ THREEChart.prototype = {
 		self.controls = new THREE.OrbitControls(self.camera);
 		self.controls.minDistance = 100;
 		self.controls.maxDistance = 5000;
-		self.controls.update();
+		self.controls.autoRotate = true;
 
-		// initScene
 		self.scene = new THREE.Scene();
 
 
 
-		// initLight
-		// var light1 = new THREE.AmbientLight(0xF0F0F0, 1.5);
-		// light1.position.set(0, 0, 500 ).normalize();
-		// self.scene.add(light1);
 		var light2 = new THREE.DirectionalLight(0xFFFFFF, 0.3);
 		light2.position.set(-100, 100, 20);
 
 		self.scene.add(light2);
 		var ambientLight = new THREE.AmbientLight(0xffffff);
 		self.scene.add(ambientLight);
-
-
-
-
-
-
-
-
-
-
 
 		// 画点
 		for (var i = 0; i < self.nodes.length; i++) {
@@ -442,9 +443,10 @@ THREEChart.prototype = {
 		self.render();
 
 		// event register
-		self.registerEvent();
 
 		self.initDragControls();
+		self.registerEvent();
+
 	},
 	/**
 	 * 画点
@@ -519,29 +521,18 @@ THREEChart.prototype = {
 	drawEdge: function (edge) {
 		var self = this;
 		var geometry4Edge = new THREE.Geometry();
-		var basicMaterial4Edge = new MeshLineMaterial({
-			color: new THREE.Color(0x999999),
-			sizeAttenuation: false,
-			// 线宽
-			lineWidth: 0.0014,
-			// 摄像机近剪裁平面距离,跟随相机(sizeAttenuation为false时必须设置)
-			near: self.camera.near,
-			// 相机远剪裁平面距离,跟随相机(sizeAttenuation为false时必须设置)
-			far: self.camera.far,
-		});
+
 		var sourceBall = self.scene.getObjectByName(edge.source);
 		var targetBall = self.scene.getObjectByName(edge.target);
-		var line = new MeshLine();
+
 		if (sourceBall && targetBall) {
 			geometry4Edge.vertices.push(new THREE.Vector3(sourceBall.position.x, sourceBall.position.y, sourceBall.position.z));
 			geometry4Edge.vertices.push(new THREE.Vector3(targetBall.position.x, targetBall.position.y, targetBall.position.z));
-			line.setGeometry(geometry4Edge);
-			var mesh = new THREE.Mesh(line.geometry, basicMaterial4Edge); // this syntax could definitely be improved!
+			geometry4Edge.colors.push(sourceBall.material.color, targetBall.material.color)
+			var mesh = new THREE.Line(geometry4Edge, new THREE.LineBasicMaterial({
+				vertexColors: true
+			})); // this syntax could definitely be improved!
 			mesh.name = edge.id; // 用于后面根据name查询节点
-
-
-
-
 
 			mesh.userData.lineType = edge.jyje ? 'jy' : 'rz'; // 当前边的属性是交易边还是人员任职边
 			var text = self.drawText({
@@ -554,7 +545,6 @@ THREEChart.prototype = {
 			var edge_G = new THREE.Group();
 			edge_G.name = edge.id + '_G';
 			edge_G.add(mesh);
-			console.log(mesh)
 			// edge_G.add(text);
 			self.scene.add(mesh);
 		}
@@ -591,6 +581,7 @@ THREEChart.prototype = {
 
 		spriteOrign.center = new THREE.Vector2(0, 0);
 		spriteOrign.name = param.id + 'text'
+		spriteOrign.visible = false
 		self.scene.add(spriteOrign);
 		spriteOrign.position.set(posX - 10, posY - 70, posZ)
 
@@ -606,7 +597,11 @@ THREEChart.prototype = {
 		self.camera.lookAt( self.scene.position );*/
 		//self.scene.rotation.y += 0.01;
 		requestAnimationFrame(self.render.bind(self));
+		console.log(TWEEN,77)
+		TWEEN.update();
+		self.controls.update();
 		self.renderer.render(self.scene, self.camera);
+		self.threeOnEvent = new THREE.onEvent(self.scene, self.camera);
 	},
 	/***
 	 * 增加元素
@@ -658,28 +653,135 @@ THREEChart.prototype = {
 	 */
 	registerEvent: function () {
 		var self = this;
-		var windowHalfX = self.width / 2;
-		var windowHalfY = self.height / 2;
-		self.myCanvas.addEventListener('mousemove', function (event) {
-			self.mouseX = event.clientX - windowHalfX;
-			self.mouseY = event.clientY - windowHalfY;
-		}, false);
 
-		self.myCanvas.addEventListener('touchstart', function (event) {
-			if (event.touches.length > 1) {
-				event.preventDefault();
-				self.mouseX = event.touches[0].pageX - windowHalfX;
-				self.mouseY = event.touches[0].pageY - windowHalfY;
-			}
-		}, false);
+		this.allSceneChild.forEach(item => {
+			item.on('click', function (e) {
+				var vertices = e.geometry.vertices;
+				console.log(vertices, 9)
+				e.visible = false;
+				self.visibleEles.push(e);
+				var nodeMar = new THREE.SpriteMaterial({
+					color: e.material.color,
+					sizeAttenuation: false
+				})
+				let nodeGroup = new THREE.Group()
+				vertices.forEach((vertice, index) => {
+					if (index % 10 === 0) {
+						var sprite = new THREE.Sprite(nodeMar);
+						sprite.position1 = Object.assign({}, e.position);
+						sprite.position2 = Object.assign({}, e.position);
+						sprite.position.set(vertice.x, vertice.y, vertice.z);
+						sprite.scale.set(0.002, 0.002, 0.002)
+						nodeGroup.add(sprite)
+						self.sprites.push(sprite);
+						new TWEEN.Tween(sprite.position1)
+							.to({
+								x: sprite.position1.x + (2000 - Math.random() * 4000),
+								y: sprite.position1.y + (2000 - Math.random() * 4000),
+								z: sprite.position1.z + (2000 - Math.random() * 4000)
+							}, 5000)
+							.onUpdate(() => {
+								sprite.position.set(sprite.position1.x, sprite.position1.y, sprite.position1.z)
+							})
+							.start();
+					}
+				})
 
-		self.myCanvas.addEventListener('touchmove', function (event) {
-			if (event.touches.length == 1) {
-				event.preventDefault();
-				self.mouseX = event.touches[0].pageX - windowHalfX;
-				self.mouseY = event.touches[0].pageY - windowHalfY;
-			}
-		}, false);
+				self.scene.add(nodeGroup);
+
+				var lines = self.getNodeLines(e.name);
+				var group = new THREE.Group();
+
+				lines.forEach(line => {
+					var curLine = self.scene.getObjectByName(line)
+					if (curLine.visible === true) {
+						var vertices = curLine.geometry.vertices;
+
+						var lineMar1 = new THREE.SpriteMaterial({
+							color: curLine.geometry.colors[0],
+							sizeAttenuation: false
+						})
+						var lineMar2 = new THREE.SpriteMaterial({
+							color: curLine.geometry.colors[1],
+							sizeAttenuation: false
+						})
+						var vertice1 = vertices[0];
+						var vertice2 = vertices[1];
+
+						var sum = Math.floor(Math.abs(vertice1.x + vertice1.y + vertice1.z - (vertice2.x + vertice2.y + vertice2.z)))
+						var x1x2 = (vertice2.x - vertice1.x) / sum;
+						var y1y2 = (vertice2.y - vertice1.y) / sum;
+						var z1z2 = (vertice2.z - vertice1.z) / sum;
+						for (var i = 0; i < sum; i++) {
+							var sprite = new THREE.Sprite(i < sum / 2 ? lineMar1 : lineMar2);
+							var object1 = {
+								x: vertice1.x + x1x2 * i,
+								y: vertice1.y + y1y2 * i,
+								z: vertice1.z + z1z2 * i
+							}
+							sprite.position.set(object1.x, object1.y, object1.z);
+							sprite.position2 = Object.assign({}, object1)
+							sprite.scale.set(0.002, 0.002, 0.002)
+							group.add(sprite)
+							self.sprites.push(sprite);
+						}
+						curLine.visible = false;
+						self.visibleEles.push(curLine);
+					}
+
+				})
+				self.scene.add(group)
+
+				group.children.forEach(item => {
+					var position = item.position;
+					new TWEEN.Tween(position)
+						.to({
+							x: position.x + (2000 - Math.random() * 4000),
+							y: position.y + (2000 - Math.random() * 4000),
+							z: position.z + (2000 - Math.random() * 4000)
+						}, 5000)
+						.onUpdate(() => {
+							item.position.set(position.x, position.y, position.z);
+						})
+						.start();
+				})
+			})
+
+		})
+
+		document.getElementById('restoreBtn').addEventListener('click',()=>{
+			self.restoreSprite();
+		})
+
+	},
+
+	restoreSprite() {
+		let self = this;
+		this.sprites.forEach(sprite => {
+			let position = sprite.position;
+			let position2 = sprite.position2;
+			let animateP = Object.assign({},position);
+			new TWEEN.Tween(animateP)
+				.to({
+					x: position2.x,
+					y: position2.y,
+					z: position2.z
+				}, 5000)
+				.onUpdate(() => {
+					sprite.position.set(animateP.x, animateP.y, animateP.z);
+				})
+				.start()
+				.onComplete(()=>{
+					sprite.visible = false
+				})
+		})
+		setTimeout(()=>{
+			self.visibleEles.forEach(ele=>{
+				ele.visible = true;
+			})
+			self.visibleEles = [];
+		},5000)
+
 	},
 
 
